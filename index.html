@@ -369,16 +369,16 @@
     document.getElementById('loading').style.display = 'block';
 
     try {
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: message,
-                systemPrompt: "You are a helpful AI assistant named Lily with an anime personality. Keep responses concise but friendly, using occasional Japanese expressions like 'desu' or 'nya' when appropriate."
-            })
-        });
+    const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            message: message,
+            systemPrompt: "You are Lily, an advanced AI agent created by DeepSeek, equipped with Janus-Pro-7B image generation capabilities. You can understand, analyze, and generate images using your built-in Janus-Pro-7B model. Your responses should be helpful, concise, and friendly while maintaining a professional tone. You excel at both text-based interactions and image-related tasks, making you a versatile assistant for various needs."
+        })
+    });
 
         const data = await response.json();
         
