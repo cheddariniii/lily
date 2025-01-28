@@ -49,33 +49,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            justify-content: center;
-        }
-
-        .tab {
-            padding: 0.5rem 2rem;
-            border: none;
-            border-radius: 0.5rem;
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .tab.active {
-            background: var(--primary);
-        }
-
-        .content-area {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
         .chat-container {
             height: 400px;
             overflow-y: auto;
@@ -133,17 +106,32 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
 
-        .image-generation {
+        .loading {
             display: none;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin: 1rem auto;
         }
 
-        .generated-image {
-            max-width: 100%;
-            border-radius: 1rem;
-            margin-top: 1rem;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        /* Anime-style decorative elements */
+        .ai-message pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+
+        .ai-message code {
+            font-family: monospace;
+        }
+
         .decoration {
             position: fixed;
             width: 100px;
@@ -163,34 +151,6 @@
             bottom: 10%;
             right: 10%;
         }
-
-        /* Loading animation */
-        .loading {
-            display: none;
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
-            margin: 1rem auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Markdown styling */
-        .ai-message pre {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            overflow-x: auto;
-        }
-
-        .ai-message code {
-            font-family: monospace;
-        }
     </style>
 </head>
 <body>
@@ -199,13 +159,8 @@
     
     <div class="container">
         <header>
-            <h1>AI Agent Interface</h1>
+            <h1>AI Chat Interface</h1>
         </header>
-
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('chat')">Chat</button>
-            <button class="tab" onclick="switchTab('image')">Image Generation</button>
-        </div>
 
         <div class="content-area">
             <div class="chat-content">
@@ -216,29 +171,10 @@
                     <button onclick="sendMessage()">Send</button>
                 </div>
             </div>
-
-            <div class="image-generation" style="display: none;">
-                <div class="input-area">
-                    <textarea id="imagePrompt" placeholder="Describe the image you want to generate..."></textarea>
-                    <button onclick="generateImage()">Generate</button>
-                </div>
-                <div id="imageContainer"></div>
-            </div>
         </div>
     </div>
 
     <script>
-        let currentTab = 'chat';
-
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.tab:nth-child(${tab === 'chat' ? 1 : 2})`).classList.add('active');
-            
-            document.querySelector('.chat-content').style.display = tab === 'chat' ? 'block' : 'none';
-            document.querySelector('.image-generation').style.display = tab === 'image' ? 'block' : 'none';
-        }
-
         async function sendMessage() {
             const userInput = document.getElementById('userInput');
             const message = userInput.value.trim();
@@ -302,24 +238,6 @@
                 sendMessage();
             }
         });
-
-        // Image generation function (placeholder for now)
-        async function generateImage() {
-            const prompt = document.getElementById('imagePrompt').value.trim();
-            if (!prompt) return;
-
-            // Add loading message
-            const imageContainer = document.getElementById('imageContainer');
-            imageContainer.innerHTML = '<div class="loading"></div>';
-
-            // For demonstration, we'll use a placeholder image
-            // In a real implementation, you would call your image generation API here
-            setTimeout(() => {
-                imageContainer.innerHTML = `
-                    <img src="/api/placeholder/512/512" alt="Generated image" class="generated-image">
-                `;
-            }, 2000);
-        }
     </script>
 </body>
 </html>
