@@ -278,15 +278,31 @@
             <img src="https://cdn.prod.website-files.com/674396c59212c6ea348b24e0/67983a402717aa28eb0105be_lily.png" alt="AI Assistant">
         </div>
 
-        <div class="content-area">
-            <div class="chat-content">
-                <div class="chat-container" id="chatContainer"></div>
-                <div class="loading" id="loading"></div>
-                <div class="input-area">
-                    <textarea id="userInput" placeholder="Type your message here..."></textarea>
-                    <button onclick="sendMessage()">Send</button>
-                </div>
+        <!-- Adding the tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('chat')">Chat</button>
+            <button class="tab" onclick="switchTab('image')">Image Generation</button>
+        </div>
+
+        <!-- Adding content sections -->
+        <div class="content-section active" id="chat-section">
+            <div class="chat-container" id="chatContainer"></div>
+            <div class="loading" id="loading"></div>
+            <div class="input-area">
+                <textarea id="userInput" placeholder="Type your message here..."></textarea>
+                <button onclick="sendMessage()">Send</button>
             </div>
+        </div>
+
+        <div class="content-section" id="image-section">
+            <div class="input-area">
+                <textarea id="imagePrompt" placeholder="Describe the image you want to generate..."></textarea>
+                <button onclick="generateImage()">Generate</button>
+            </div>
+            <div class="image-grid" id="imageGrid">
+                <!-- Generated images will appear here -->
+            </div>
+            <div class="loading" id="imageLoading"></div>
         </div>
     </div>
 
