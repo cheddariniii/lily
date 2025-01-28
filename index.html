@@ -179,9 +179,61 @@
             left: 10%;
         }
 
-        .decoration:nth-child(2) {
-            bottom: 10%;
-            right: 10%;
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 0.8rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 0.5rem;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .tab.active {
+            background: rgba(255, 105, 180, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .tab:hover {
+            background: rgba(255, 105, 180, 0.2);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .generated-image {
+            width: 100%;
+            max-width: 512px;
+            height: auto;
+            margin: 1rem auto;
+            display: block;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
 
@@ -229,6 +281,54 @@
     </div>
 
     <script>
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+            
+            // Update content sections
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`${tab}-section`).classList.add('active');
+        }
+
+        async function generateImage() {
+            const prompt = document.getElementById('imagePrompt').value.trim();
+            if (!prompt) return;
+
+            const imageGrid = document.getElementById('imageGrid');
+            const loading = document.getElementById('imageLoading');
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+                
+                if (data.url) {
+                    const imgWrapper = document.createElement('div');
+                    const img = document.createElement('img');
+                    img.src = data.url;
+                    img.alt = prompt;
+                    img.className = 'generated-image';
+                    imgWrapper.appendChild(img);
+                    imageGrid.insertBefore(imgWrapper, imageGrid.firstChild);
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to generate image. Please try again.');
+            }
+
+            loading.style.display = 'none';
+        }
+
         async function sendMessage() {
             const userInput = document.getElementById('userInput');
             const message = userInput.value.trim();
@@ -290,6 +390,13 @@
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
+            }
+        });
+
+        document.getElementById('imagePrompt').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                generateImage();
             }
         });
     </script>
