@@ -12,74 +12,65 @@ export default async function handler(req, res) {
     }
 
     if (req.method !== 'POST') {
-        res.status(405).json({ error: 'Method not allowed' });
-        return;
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
         const { prompt } = req.body;
         
-        // Log the incoming request
-        console.log('Received prompt:', prompt);
-        console.log('API Key present:', !!process.env.OPENAI_API_KEY);
-
-        if (!process.env.OPENAI_API_KEY) {
-            throw new Error('OpenAI API key is not configured');
+        // Debug log - check if we have the API key (don't log the full key!)
+        const apiKey = process.env.OPENAI_API_KEY;
+        console.log('API Key exists:', !!apiKey);
+        console.log('API Key starts with:', apiKey ? apiKey.slice(0, 4) : 'none');
+        
+        if (!apiKey) {
+            return res.status(500).json({ error: 'OpenAI API key is not configured' });
         }
 
         if (!prompt) {
-            throw new Error('Prompt is required');
+            return res.status(400).json({ error: 'Prompt is required' });
         }
 
-        const response = await fetch('https://api.openai.com/v1/images/generations', {
+        console.log('Making request to OpenAI with prompt:', prompt);
+
+        const response = await fetch('https://api.openai.com/v1/images/generate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                'OpenAI-Organization': process.env.OPENAI_ORG_ID // Optional: if you have an org ID
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
                 prompt: prompt,
                 model: "dall-e-3",
                 n: 1,
-                size: "1024x1024",
-                quality: "standard",
-                response_format: "url"
+                size: "1024x1024"
             })
         });
 
-        // Log the OpenAI API response status
-        console.log('OpenAI API response status:', response.status);
+        console.log('OpenAI response status:', response.status);
 
         if (!response.ok) {
-            const errorData = await response.text();
-            console.error('OpenAI API error:', errorData);
+            const errorText = await response.text();
+            console.error('OpenAI error response:', errorText);
             return res.status(response.status).json({ 
-                error: 'OpenAI API error', 
-                details: errorData 
+                error: 'OpenAI API error',
+                details: errorText
             });
         }
 
         const data = await response.json();
-        
-        // Log successful response structure
-        console.log('Response structure:', JSON.stringify(data, null, 2));
+        console.log('OpenAI success response:', JSON.stringify(data, null, 2));
 
+        // Check for the expected data structure
         if (!data.data?.[0]?.url) {
-            console.error('Invalid response structure:', data);
             return res.status(500).json({ 
-                error: 'Invalid response from OpenAI',
-                details: 'Response missing expected data structure'
+                error: 'Unexpected response format from OpenAI'
             });
         }
 
         return res.status(200).json({ url: data.data[0].url });
     } catch (error) {
         console.error('Server error:', error);
-        return res.status(500).json({ 
-            error: 'Server error',
-            message: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        return res.status(500).json({ error: error.message });
     }
 }
