@@ -140,6 +140,28 @@
             margin-right: auto;
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
+            min-height: 44px;
+            word-break: break-word;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 20px;
+            background-color: var(--text);
+            margin-left: 4px;
+            animation: blink 1s infinite;
+        }
+        
+        .typing-text {
+            display: inline;
+            white-space: pre-wrap;
         }
 
         .input-area {
@@ -463,18 +485,48 @@
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-        function addMessage(role, content) {
+async function typeText(element, text, speed = 30) {
+    const contentDiv = element.querySelector('.typing-text');
+    let currentText = '';
+    
+    // Convert markdown to HTML first
+    const htmlContent = marked.parse(text);
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    const textContent = tempDiv.textContent;
+    
+    for (let i = 0; i < textContent.length; i++) {
+        currentText += textContent[i];
+        contentDiv.textContent = currentText;
+        await sleep(speed);
+    }
+    
+    // After typing is complete, render the final markdown
+    element.innerHTML = marked.parse(text);
+}
+
+function addMessage(role, content) {
     const chatContainer = document.getElementById('chatContainer');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}-message`;
     
-    // If content is an object with text property (Claude's response format)
-    const messageText = content?.text || content;
+    if (role === 'ai') {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-text';
+        messageDiv.appendChild(typingDiv);
+        
+        const cursor = document.createElement('div');
+        cursor.className = 'typing-cursor';
+        messageDiv.appendChild(cursor);
+        
+        chatContainer.appendChild(messageDiv);
+        typeText(messageDiv, content);
+    } else {
+        messageDiv.innerHTML = marked.parse(content);
+        chatContainer.appendChild(messageDiv);
+    }
     
-    // Use marked library to render markdown
-    messageDiv.innerHTML = marked.parse(messageText);
-    
-    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
         // Handle Enter key in textarea
