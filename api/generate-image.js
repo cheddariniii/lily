@@ -18,11 +18,10 @@ export default async function handler(req, res) {
     try {
         const { prompt } = req.body;
         
-        // Debug log - check if we have the API key (don't log the full key!)
-        const apiKey = process.env.OPENAI_API_KEY;
-        console.log('API Key exists:', !!apiKey);
-        console.log('API Key starts with:', apiKey ? apiKey.slice(0, 4) : 'none');
+        // Debug log
+        console.log('Received prompt:', prompt);
         
+        const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
             return res.status(500).json({ error: 'OpenAI API key is not configured' });
         }
@@ -33,17 +32,21 @@ export default async function handler(req, res) {
 
         console.log('Making request to OpenAI with prompt:', prompt);
 
-        const response = await fetch('https://api.openai.com/v1/images/generate', {
+        // Note the corrected URL: /v1/images/generations
+        const response = await fetch('https://api.openai.com/v1/images/generations', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`
+                // Removed the Organization header since it's causing issues
             },
             body: JSON.stringify({
                 prompt: prompt,
                 model: "dall-e-3",
                 n: 1,
-                size: "1024x1024"
+                size: "1024x1024",
+                quality: "standard",
+                response_format: "url"
             })
         });
 
@@ -61,7 +64,6 @@ export default async function handler(req, res) {
         const data = await response.json();
         console.log('OpenAI success response:', JSON.stringify(data, null, 2));
 
-        // Check for the expected data structure
         if (!data.data?.[0]?.url) {
             return res.status(500).json({ 
                 error: 'Unexpected response format from OpenAI'
