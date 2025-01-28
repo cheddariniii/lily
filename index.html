@@ -9,7 +9,7 @@
         :root {
             --primary: #FF69B4;
             --secondary: #4B0082;
-            --background: #1a1a2e;
+            --background: rgba(26, 26, 46, 0.7);
             --text: #ffffff;
         }
 
@@ -21,24 +21,48 @@
         }
 
         body {
-            background-color: var(--background);
             color: var(--text);
             min-height: 100vh;
+            position: relative;
+        }
+
+        .hero-section {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -2;
+        }
+
+        .hero-background {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .hero-background video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
+            position: relative;
+            z-index: 1;
         }
 
         header {
             text-align: center;
             margin-bottom: 2rem;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            background: linear-gradient(45deg, rgba(255, 105, 180, 0.8), rgba(75, 0, 130, 0.8));
             padding: 2rem;
             border-radius: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         h1 {
@@ -52,10 +76,12 @@
         .chat-container {
             height: 400px;
             overflow-y: auto;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 1rem;
             padding: 1rem;
             margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .message {
@@ -66,18 +92,27 @@
         }
 
         .user-message {
-            background: var(--primary);
+            background: rgba(255, 105, 180, 0.8);
             margin-left: auto;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
 
         .ai-message {
-            background: var(--secondary);
+            background: rgba(75, 0, 130, 0.8);
             margin-right: auto;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
 
         .input-area {
             display: flex;
             gap: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         textarea {
@@ -85,10 +120,14 @@
             padding: 1rem;
             border: none;
             border-radius: 0.5rem;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.2);
             color: var(--text);
             resize: vertical;
             min-height: 60px;
+        }
+
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.7);
         }
 
         button {
@@ -154,6 +193,14 @@
     </style>
 </head>
 <body>
+    <div class="hero-section">
+        <div class="hero-background">
+            <video autoplay loop muted playsinline>
+                <source src="https://res.cloudinary.com/ddgjrttti/video/upload/v1737432751/AdobeStock_887589249_tbpcv7.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
     <div class="decoration"></div>
     <div class="decoration"></div>
     
