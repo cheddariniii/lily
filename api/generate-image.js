@@ -1,49 +1,44 @@
-// api/generate-image.js
-export default async function handler(req, res) {
-    // Handle CORS
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
-
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
+async function generateImage() {
+    const prompt = document.getElementById('imagePrompt').value.trim();
+    if (!prompt) {
+        alert('Please enter a prompt');
         return;
     }
 
-    if (req.method !== 'POST') {
-        res.status(405).json({ error: 'Method not allowed' });
-        return;
-    }
+    const imageGrid = document.getElementById('imageGrid');
+    const loading = document.getElementById('imageLoading');
+    loading.style.display = 'block';
 
     try {
-        const { prompt } = req.body;
-        
-        const response = await fetch('https://api.openai.com/v1/images/generations', {
+        const response = await fetch('/api/generate-image', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
             },
-            body: JSON.stringify({
-                model: "dall-e-3",
-                prompt: prompt,
-                n: 1,
-                size: "1024x1024",
-                quality: "standard"
-            })
+            body: JSON.stringify({ prompt })
         });
 
+        const data = await response.json();
+        
         if (!response.ok) {
-            const errorData = await response.text();
-            console.error('OpenAI API error:', errorData);
-            throw new Error(errorData);
+            throw new Error(data.error || 'Failed to generate image');
+        }
+        
+        if (!data.url) {
+            throw new Error('No image URL received');
         }
 
-        const data = await response.json();
-        res.status(200).json({ url: data.data[0].url });
+        const imgWrapper = document.createElement('div');
+        const img = document.createElement('img');
+        img.src = data.url;
+        img.alt = prompt;
+        img.className = 'generated-image';
+        imgWrapper.appendChild(img);
+        imageGrid.insertBefore(imgWrapper, imageGrid.firstChild);
     } catch (error) {
-        console.error('Server error:', error);
-        res.status(500).json({ error: error.message });
+        console.error('Error:', error);
+        alert(`Failed to generate image: ${error.message}`);
+    } finally {
+        loading.style.display = 'none';
     }
 }
