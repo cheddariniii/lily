@@ -190,6 +190,28 @@
             bottom: 10%;
             right: 10%;
         }
+
+        .floating-character {
+            position: absolute;
+            top: -180px;
+            right: 20px;
+            width: 150px;
+            height: auto;
+            animation: floating 3s ease-in-out infinite;
+            z-index: 2;
+        }
+
+        @keyframes floating {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
     </style>
 </head>
 <body>
@@ -211,7 +233,8 @@
 
         <div class="content-area">
             <div class="chat-content">
-                <div class="chat-container" id="chatContainer"></div>
+                <img src="https://cdn.prod.website-files.com/674396c59212c6ea348b24e0/67983a402717aa28eb0105be_lily.png" alt="AI Assistant" class="floating-character">
+            <div class="chat-container" id="chatContainer"></div>
                 <div class="loading" id="loading"></div>
                 <div class="input-area">
                     <textarea id="userInput" placeholder="Type your message here..."></textarea>
