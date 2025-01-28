@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Interface</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <style>
+        :root {
+            --primary: #FF69B4;
+            --secondary: #4B0082;
+            --background: #1a1a2e;
+            --text: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 0.5rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: var(--primary);
+        }
+
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: var(--primary);
+            margin-left: auto;
+        }
+
+        .ai-message {
+            background: var(--secondary);
+            margin-right: auto;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 1rem;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: var(--primary);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .image-generation {
+            display: none;
+        }
+
+        .generated-image {
+            max-width: 100%;
+            border-radius: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Anime-style decorative elements */
+        .decoration {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, var(--primary), transparent);
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: -1;
+        }
+
+        .decoration:nth-child(1) {
+            top: 10%;
+            left: 10%;
+        }
+
+        .decoration:nth-child(2) {
+            bottom: 10%;
+            right: 10%;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin: 1rem auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Markdown styling */
+        .ai-message pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+
+        .ai-message code {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="decoration"></div>
+    <div class="decoration"></div>
+    
+    <div class="container">
+        <header>
+            <h1>AI Agent Interface</h1>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('chat')">Chat</button>
+            <button class="tab" onclick="switchTab('image')">Image Generation</button>
+        </div>
+
+        <div class="content-area">
+            <div class="chat-content">
+                <div class="chat-container" id="chatContainer"></div>
+                <div class="loading" id="loading"></div>
+                <div class="input-area">
+                    <textarea id="userInput" placeholder="Type your message here..."></textarea>
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+
+            <div class="image-generation" style="display: none;">
+                <div class="input-area">
+                    <textarea id="imagePrompt" placeholder="Describe the image you want to generate..."></textarea>
+                    <button onclick="generateImage()">Generate</button>
+                </div>
+                <div id="imageContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'chat';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${tab === 'chat' ? 1 : 2})`).classList.add('active');
+            
+            document.querySelector('.chat-content').style.display = tab === 'chat' ? 'block' : 'none';
+            document.querySelector('.image-generation').style.display = tab === 'image' ? 'block' : 'none';
+        }
+
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage('user', message);
+            userInput.value = '';
+
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        systemPrompt: "You are a helpful AI assistant with an anime personality. Keep responses concise but friendly."
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.content) {
+                    // Add AI response to chat
+                    addMessage('ai', data.content);
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('ai', 'Gomen nasai! An error occurred while processing your request.');
+            }
+
+            // Hide loading indicator
+            document.getElementById('loading').style.display = 'none';
+            
+            // Scroll to bottom
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function addMessage(role, content) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+            
+            // Use marked library to render markdown
+            messageDiv.innerHTML = marked.parse(content);
+            
+            chatContainer.appendChild(messageDiv);
+        }
+
+        // Handle Enter key in textarea
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Image generation function (placeholder for now)
+        async function generateImage() {
+            const prompt = document.getElementById('imagePrompt').value.trim();
+            if (!prompt) return;
+
+            // Add loading message
+            const imageContainer = document.getElementById('imageContainer');
+            imageContainer.innerHTML = '<div class="loading"></div>';
+
+            // For demonstration, we'll use a placeholder image
+            // In a real implementation, you would call your image generation API here
+            setTimeout(() => {
+                imageContainer.innerHTML = `
+                    <img src="/api/placeholder/512/512" alt="Generated image" class="generated-image">
+                `;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
