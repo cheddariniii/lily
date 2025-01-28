@@ -21,6 +21,26 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        @keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 20px;
+    background-color: var(--text);
+    margin-left: 4px;
+    animation: blink 1s infinite;
+}
+
+.typing-text {
+    display: inline;
+    white-space: pre-wrap;
+}
+
         body {
             color: var(--text);
             min-height: 100vh;
@@ -39,6 +59,26 @@
     width: 20px;
     height: 20px;
     object-fit: contain;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 20px;
+    background-color: var(--text);
+    margin-left: 4px;
+    animation: blink 1s infinite;
+}
+
+.typing-text {
+    display: inline;
+    white-space: pre-wrap;
 }
 
 .social-button.pumpfun img {
@@ -206,13 +246,13 @@
         }
 
         .ai-message {
-            background: rgba(75, 0, 130, 0.8);
-            margin-right: auto;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            min-height: 44px;
-            word-break: break-word;
-        }
+    background: rgba(75, 0, 130, 0.8);
+    margin-right: auto;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    min-height: 44px;
+    word-break: break-word;
+}
 
         @keyframes blink {
             0% { opacity: 1; }
@@ -462,32 +502,55 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-    // Splash screen handling
-    const splashScreen = document.querySelector('.splash-screen');
-    
-    // Remove splash screen from DOM after animation
-    setTimeout(() => {
-        splashScreen.addEventListener('animationend', () => {
-            splashScreen.remove();
-        });
-    }, 4000); // Total time: 2s delay + 2s fade
-
-    // Welcome message - delayed to appear after splash screen fades
-    const welcomeMessage = `Hi! I'm Lily, your AI assistant equipped with both chat and image generation capabilities. 
-    
-Here's what I can help you with:
-• General questions and conversation
-• Image generation using Janus-Pro-7B
-• Code assistance and explanations
-• Analysis and problem-solving
-
-Feel free to start a chat or switch to the Image Generation tab to create images!`;
-
-    setTimeout(() => {
-        addMessage('ai', welcomeMessage);
-    }, 4500); // Start after splash screen is gone
-});
+        // Helper Functions
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        async function typeText(element, text, speed = 30) {
+            const contentDiv = element.querySelector('.typing-text');
+            let currentText = '';
+            
+            // Convert markdown to HTML first
+            const htmlContent = marked.parse(text);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            const textContent = tempDiv.textContent;
+            
+            for (let i = 0; i < textContent.length; i++) {
+                currentText += textContent[i];
+                contentDiv.textContent = currentText;
+                await sleep(speed);
+            }
+            
+            // After typing is complete, render the final markdown
+            element.innerHTML = marked.parse(text);
+        }
+        
+        function addMessage(role, content) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+            
+            if (role === 'ai') {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'typing-text';
+                messageDiv.appendChild(typingDiv);
+                
+                const cursor = document.createElement('div');
+                cursor.className = 'typing-cursor';
+                messageDiv.appendChild(cursor);
+                
+                chatContainer.appendChild(messageDiv);
+                typeText(messageDiv, content);
+            } else {
+                messageDiv.innerHTML = marked.parse(content);
+                chatContainer.appendChild(messageDiv);
+            }
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
         function switchTab(tab) {
             // Update tab buttons
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -497,15 +560,15 @@ Feel free to start a chat or switch to the Image Generation tab to create images
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             document.getElementById(`${tab}-section`).classList.add('active');
         }
-
+        
         async function generateImage() {
             const prompt = document.getElementById('imagePrompt').value.trim();
             if (!prompt) return;
-
+        
             const imageGrid = document.getElementById('imageGrid');
             const loading = document.getElementById('imageLoading');
             loading.style.display = 'block';
-
+        
             try {
                 const response = await fetch('/api/generate-image', {
                     method: 'POST',
@@ -514,7 +577,7 @@ Feel free to start a chat or switch to the Image Generation tab to create images
                     },
                     body: JSON.stringify({ prompt })
                 });
-
+        
                 const data = await response.json();
                 
                 if (data.url) {
@@ -532,113 +595,97 @@ Feel free to start a chat or switch to the Image Generation tab to create images
                 console.error('Error:', error);
                 alert('Failed to generate image. Please try again.');
             }
-
+        
             loading.style.display = 'none';
         }
-
+        
         async function sendMessage() {
-    const userInput = document.getElementById('userInput');
-    const message = userInput.value.trim();
-    if (!message) return;
-
-    // Add user message to chat
-    addMessage('user', message);
-    userInput.value = '';
-
-    // Show loading indicator
-    document.getElementById('loading').style.display = 'block';
-
-    try {
-    const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            message: message,
-            systemPrompt: "You are Lily, an advanced AI agent created by DeepSeek, equipped with Janus-Pro-7B image generation capabilities. You can understand, analyze, and generate images using your built-in Janus-Pro-7B model. Your responses should be helpful, concise, and friendly while maintaining a professional tone. You excel at both text-based interactions and image-related tasks, making you a versatile assistant for various needs."
-        })
-    });
-
-        const data = await response.json();
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+            if (!message) return;
         
-        if (data.content[0]?.text) {
-            // Add AI response to chat
-            addMessage('ai', data.content[0].text);
-        } else {
-            throw new Error('Invalid response format');
+            // Add user message to chat
+            addMessage('user', message);
+            userInput.value = '';
+        
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+        
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        systemPrompt: "You are Lily, an advanced AI agent created by DeepSeek, equipped with Janus-Pro-7B image generation capabilities. You can understand, analyze, and generate images using your built-in Janus-Pro-7B model. Your responses should be helpful, concise, and friendly while maintaining a professional tone. You excel at both text-based interactions and image-related tasks, making you a versatile assistant for various needs."
+                    })
+                });
+        
+                const data = await response.json();
+                
+                if (data.content[0]?.text) {
+                    // Add AI response to chat
+                    addMessage('ai', data.content[0].text);
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('ai', 'An error occurred while processing your request.');
+            }
+        
+            // Hide loading indicator
+            document.getElementById('loading').style.display = 'none';
+            
+            // Scroll to bottom
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        addMessage('ai', 'Gomen nasai! An error occurred while processing your request.');
-    }
-
-    // Hide loading indicator
-    document.getElementById('loading').style.display = 'none';
-    
-    // Scroll to bottom
-    const chatContainer = document.getElementById('chatContainer');
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-async function typeText(element, text, speed = 30) {
-    const contentDiv = element.querySelector('.typing-text');
-    let currentText = '';
-    
-    // Convert markdown to HTML first
-    const htmlContent = marked.parse(text);
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    const textContent = tempDiv.textContent;
-    
-    for (let i = 0; i < textContent.length; i++) {
-        currentText += textContent[i];
-        contentDiv.textContent = currentText;
-        await sleep(speed);
-    }
-    
-    // After typing is complete, render the final markdown
-    element.innerHTML = marked.parse(text);
-}
-
-function addMessage(role, content) {
-    const chatContainer = document.getElementById('chatContainer');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${role}-message`;
-    
-    if (role === 'ai') {
-        const typingDiv = document.createElement('div');
-        typingDiv.className = 'typing-text';
-        messageDiv.appendChild(typingDiv);
         
-        const cursor = document.createElement('div');
-        cursor.className = 'typing-cursor';
-        messageDiv.appendChild(cursor);
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            // Splash screen handling
+            const splashScreen = document.querySelector('.splash-screen');
+            
+            // Remove splash screen from DOM after animation
+            setTimeout(() => {
+                splashScreen.addEventListener('animationend', () => {
+                    splashScreen.remove();
+                });
+            }, 4000);
         
-        chatContainer.appendChild(messageDiv);
-        typeText(messageDiv, content);
-    } else {
-        messageDiv.innerHTML = marked.parse(content);
-        chatContainer.appendChild(messageDiv);
-    }
-    
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-        // Handle Enter key in textarea
+            // Welcome message - delayed to appear after splash screen fades
+            const welcomeMessage = `Hi! I'm Lily, your AI assistant equipped with both chat and image generation capabilities. 
+            
+        Here's what I can help you with:
+        • General questions and conversation
+        • Image generation using Janus-Pro-7B
+        • Code assistance and explanations
+        • Analysis and problem-solving
+        
+        Feel free to start a chat or switch to the Image Generation tab to create images!`;
+        
+            setTimeout(() => {
+                addMessage('ai', welcomeMessage);
+            }, 4500);
+        });
+        
+        // Event Listeners
         document.getElementById('userInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
             }
         });
-
+        
         document.getElementById('imagePrompt').addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 generateImage();
             }
         });
-    </script>
+        </script>
 </body>
 </html>
