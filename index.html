@@ -357,60 +357,63 @@
         }
 
         async function sendMessage() {
-            const userInput = document.getElementById('userInput');
-            const message = userInput.value.trim();
-            if (!message) return;
+    const userInput = document.getElementById('userInput');
+    const message = userInput.value.trim();
+    if (!message) return;
 
-            // Add user message to chat
-            addMessage('user', message);
-            userInput.value = '';
+    // Add user message to chat
+    addMessage('user', message);
+    userInput.value = '';
 
-            // Show loading indicator
-            document.getElementById('loading').style.display = 'block';
+    // Show loading indicator
+    document.getElementById('loading').style.display = 'block';
 
-            try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: message,
-                        systemPrompt: "You are a helpful AI assistant named Lily with an anime personality. Keep responses concise but friendly, using occasional Japanese expressions like 'desu' or 'nya' when appropriate."
-                    })
-                });
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                systemPrompt: "You are a helpful AI assistant named Lily with an anime personality. Keep responses concise but friendly, using occasional Japanese expressions like 'desu' or 'nya' when appropriate."
+            })
+        });
 
-                const data = await response.json();
-                
-                if (data.content) {
-                    // Add AI response to chat
-                    addMessage('ai', data.content);
-                } else {
-                    throw new Error('Invalid response format');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                addMessage('ai', 'Gomen nasai! An error occurred while processing your request.');
-            }
-
-            // Hide loading indicator
-            document.getElementById('loading').style.display = 'none';
-            
-            // Scroll to bottom
-            const chatContainer = document.getElementById('chatContainer');
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+        const data = await response.json();
+        
+        if (data.content[0]?.text) {
+            // Add AI response to chat
+            addMessage('ai', data.content[0].text);
+        } else {
+            throw new Error('Invalid response format');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        addMessage('ai', 'Gomen nasai! An error occurred while processing your request.');
+    }
+
+    // Hide loading indicator
+    document.getElementById('loading').style.display = 'none';
+    
+    // Scroll to bottom
+    const chatContainer = document.getElementById('chatContainer');
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
 
         function addMessage(role, content) {
-            const chatContainer = document.getElementById('chatContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${role}-message`;
-            
-            // Use marked library to render markdown
-            messageDiv.innerHTML = marked.parse(content);
-            
-            chatContainer.appendChild(messageDiv);
-        }
+    const chatContainer = document.getElementById('chatContainer');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${role}-message`;
+    
+    // If content is an object with text property (Claude's response format)
+    const messageText = content?.text || content;
+    
+    // Use marked library to render markdown
+    messageDiv.innerHTML = marked.parse(messageText);
+    
+    chatContainer.appendChild(messageDiv);
+}
 
         // Handle Enter key in textarea
         document.getElementById('userInput').addEventListener('keypress', function(e) {
