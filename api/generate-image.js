@@ -19,8 +19,6 @@ export default async function handler(req, res) {
     try {
         const { prompt } = req.body;
         
-        // Add your preferred image generation API call here
-        // Example using OpenAI's DALL-E (you'll need to add OPENAI_API_KEY to your env variables)
         const response = await fetch('https://api.openai.com/v1/images/generations', {
             method: 'POST',
             headers: {
@@ -28,14 +26,18 @@ export default async function handler(req, res) {
                 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
             },
             body: JSON.stringify({
+                model: "dall-e-3",
                 prompt: prompt,
                 n: 1,
-                size: "1024x1024"
+                size: "1024x1024",
+                quality: "standard"
             })
         });
 
         if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
+            const errorData = await response.text();
+            console.error('OpenAI API error:', errorData);
+            throw new Error(errorData);
         }
 
         const data = await response.json();
