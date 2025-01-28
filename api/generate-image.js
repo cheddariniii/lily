@@ -11,10 +11,6 @@ export default async function handler(req, res) {
         return;
     }
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
-
     try {
         const { prompt } = req.body;
         
@@ -22,6 +18,9 @@ export default async function handler(req, res) {
         console.log('Received prompt:', prompt);
         
         const apiKey = process.env.OPENAI_API_KEY;
+        console.log('API Key exists:', !!apiKey);
+        console.log('API Key starts with:', apiKey ? apiKey.slice(0, 4) : 'none');
+
         if (!apiKey) {
             return res.status(500).json({ error: 'OpenAI API key is not configured' });
         }
@@ -30,19 +29,19 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Prompt is required' });
         }
 
-        console.log('Making request to OpenAI with prompt:', prompt);
+        // Create the full request URL - THIS IS THE FIXED URL
+        const url = 'https://api.openai.com/v1/images/generations';
+        console.log('Making request to URL:', url);
 
-        // Note the corrected URL: /v1/images/generations
-        const response = await fetch('https://api.openai.com/v1/images/generations', {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`
-                // Removed the Organization header since it's causing issues
             },
             body: JSON.stringify({
-                prompt: prompt,
                 model: "dall-e-3",
+                prompt: prompt,
                 n: 1,
                 size: "1024x1024",
                 quality: "standard",
